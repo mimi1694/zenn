@@ -1,67 +1,67 @@
 let localTimer = {
-	currentTimer: 0,
-	getTimer: function() {
-		chrome.extension.sendRequest({method: 'getbackgroundTimer'}, function(response) {
-			localTimer.currentTimer = response.result
-			//localTimer.updateTimer()
-		})
-	},
-	addToTimer: function(amount) {
-    chrome.extension.sendRequest(
-      {method: 'addTobackgroundTimer', data: amount}, 
-      function(response) {
-			  localTimer.getTimer()
-      }
-    )
-	},
-	updateTimer: function() {
-		document.getElementById('timer').innerHTML = "" + localTimer.currentTimer
+  currentTimer: 0,
+  getTimer: function () {
+    chrome.extension.sendRequest({ method: 'getbackgroundTimer' }, function (response) {
+      localTimer.currentTimer = response.result
+      localTimer.updateTimer()
+    })
   },
-  decrementTimer: function(){
-    chrome.extension.sendRequest (
-      {method: 'decrementTimer'},
-      function(response) {
+  addToTimer: function (amount) {
+    chrome.extension.sendRequest(
+      { method: 'addTobackgroundTimer', data: amount },
+      function (response) {
         localTimer.getTimer()
       }
     )
   },
-  startTimer: function (){
+  updateTimer: function () {
+    document.getElementById('timer').innerHTML = "" + localTimer.currentTimer
+  },
+  decrementTimer: function () {
     chrome.extension.sendRequest(
-      {method: 'startTimer'},
-      localTimer.getTimer()
+      { method: 'decrementTimer' },
+      function (response) {
+        localTimer.getTimer()
+      }
+    )
+  },
+  startTimer: function () {
+    chrome.extension.sendRequest(
+      { method: 'startTimer' },
+      function (response) {
+        localTimer.getTimer()
+      }
     )
   }
 }
 
-chrome.extension.onRequest.addListener(function(request, sender, sendResponse) {
-	switch (request.method) {
+chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
+  switch (request.method) {
     case 'updateTimer':
       localTimer.currentTimer = request.data
       localTimer.updateTimer()
-      sendResponse({result: 'success'})
+      sendResponse({ result: 'success' })
       break
     default:
       break
-	}
+  }
 })
 
 document.addEventListener('DOMContentLoaded', function () {
-	//localTimer.getTimer()
+  //localTimer.getTimer()
   document.getElementById('timer-control').style.display = 'none'
   document.getElementById('new-btn').onclick = () => {
-    document.getElementById('timer-control').style.display = 'block'  
+    document.getElementById('timer-control').style.display = 'block'
     document.getElementById('button-control').style.display = 'none'
   }
   document.getElementById('saved-btn').onclick = () => {
-    document.getElementById('timer-control').style.display = 'block'  
+    document.getElementById('timer-control').style.display = 'block'
     document.getElementById('button-control').style.display = 'none'
   }
   
-  if(document.getElementById('go')) {
-    document.getElementById('go').onclick = ( function() {
-      localTimer.getTimer()
-      localTimer.updateTimer()
-  })}
+  document.getElementById('go').onclick = function () {
+    localTimer.startTimer()
+  }
 })
 
 //     const dropdown = document.getElementById('dropdown')
@@ -69,10 +69,10 @@ document.addEventListener('DOMContentLoaded', function () {
 //     const stop = document.getElementById('stop')
 //     const pause = document.getElementById('pause')
 //     let time
-  
+
 //     let timer = null 
-    
-  
+
+
 //     getCurrentTabUrl((url) => {
 //       getSavedTimer( (savedTimer) => {
 //         if (savedTimer >= 0){
@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //             time = 0
 //             saveTimerSettings(time)
 //           })
-      
+
 //           go.addEventListener('click', () => {
 //             if (time === 0) time = dropdown.value * 60
 //             switchFunctionality(go, stop)
@@ -101,15 +101,15 @@ document.addEventListener('DOMContentLoaded', function () {
 //               saveTimerSettings(time)
 //             }, 1000)
 //           })
-      
+
 //           pause.addEventListener('click', () => {
 //             go.disabled = false
 //             clearInterval(timer)
 //             saveTimerSettings(time)
 //           })
-        
+
 //       })
-        
+
 //       if (!dropdown.value) {
 //         getSavedTimer(url, (savedTimer) => {
 //           if (savedTimer) { //no drop down clicked, already saved
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function () {
 //         document.getElementById('timer').innerHTML = ''
 //         setTimer(dropdown.value)
 //       }
-      
+
 //     })
 // }
 // })
