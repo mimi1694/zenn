@@ -1,0 +1,78 @@
+
+<!doctype html>
+<!--<html>
+  <head>
+    <title>Basic Popup</title>
+	<script src="popup.js"></script>
+	
+	<script src="jquery-3.2.1.min.js"></script>
+  </head>
+  <body>
+		<div>Current Ticker: <span id="ticker-amount"></span></div>
+		<button id="add-ten-to-ticker">Add 10</button>
+  </body>
+</html>
+-->
+
+<html>
+  <head>
+    <title>Getting Started Extension's Popup</title>
+    <style type="text/css">
+      body {
+        margin: 10px;
+        white-space: nowrap;
+        height:150px;
+        width:250px;
+        align-self: left;
+      }
+
+      h1 {
+        font-size: 15px;
+      }
+
+      #container {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+        justify-content:center;
+      }
+
+      #corner-icon {
+        width:3em;
+        height:3em;
+      }
+  
+    </style>
+
+    <script src="popup.js"></script>
+  </head>
+
+  <body>
+    <h1><img id="corner-icon" src="/zenify_icon.png"/></h1>
+    <div id="container">
+      <div id="button-control">
+        <span>Set Zen Timer</span><br />
+        <button id="new-btn">New Timer</button> <button id="saved-btn">Saved Timer</button>
+      </div>
+      <div id="timer-control">
+        <select id="dropdown">
+          <option selected disabled hidden value=''></option>
+          <option value="1">1 Minute</option>
+          <option value="2">2 Minutes</option>
+          <option value="3">3 Minutes</option>
+          <option value="4">4 Minutes</option>
+          <option value="5">5 Minutes</option>
+        </select>
+        <button id="go">GO</button>
+        <button id="pause">PAUSE</button>
+        <button id="stop">STOP</button>
+        <br /> <br />
+      </div>
+      <div>
+        <h2>Stay Zen</h2>
+        <p id="timer"><br/></p>
+      </div>
+
+    </div>
+  </body>
+</html>

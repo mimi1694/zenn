@@ -1,0 +1,24 @@
+{
+    "manifest_version": 2,
+    
+      "name": "Zenify",
+      "description": "This extension allows the user to make chrome unclickable for their allotted amount of time",
+      "version": "1.0",
+    
+      "browser_action": {
+        "default_icon": "zenify_icon.png",
+        "default_popup": "popup.html",
+        "default_title": "Zen Your Chrome"
+      },
+      "background":{
+        "page":"background.html"
+      },
+      "permissions": [
+        "<all_urls>",
+        "activeTab",
+        "storage",
+        "tabs",
+        "background"
+      ],
+      "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+}
