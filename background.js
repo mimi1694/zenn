@@ -2,6 +2,7 @@ let backgroundTimer = {
     timerInterval: 1000, // seconds
     timer: 0,
     started: false,
+    interval: null,
     addToTimer: function (amount) {
         backgroundTimer.timer += amount
         backgroundTimer.updateTimer()
@@ -12,11 +13,22 @@ let backgroundTimer = {
     },
     startTimer: function () {
         backgroundTimer.started = true
-        setInterval(
+        backgroundTimer.interval = setInterval(
             function () {
                 backgroundTimer.decrementTimer()
             },
             backgroundTimer.timerInterval)
+    },
+    pauseTimer: function (){
+        backgroundTimer.started = true
+        clearInterval(backgroundTimer.interval)
+        backgroundTimer.updateTimer()
+    },
+    clearTimer: function () {
+        backgroundTimer.started = false
+        clearInterval(backgroundTimer.interval)
+        backgroundTimer.timer = 0
+        backgroundTimer.updateTimer()
     },
     updateTimer: function () {
         if (backgroundTimer.timer === 0) {
@@ -24,7 +36,8 @@ let backgroundTimer = {
         } else {
             chrome.browserAction.setBadgeText({ text: '' + backgroundTimer.timer })
         }
-        chrome.extension.sendRequest({ method: 'updateTimer', data: backgroundTimer.timer }, function (response) {
+        chrome.extension.sendRequest({ method: 'updateTimer', data: backgroundTimer.timer }, 
+        function (response) {
         })
     },
 }
@@ -43,6 +56,14 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
             break
         case 'startTimer':
             backgroundTimer.startTimer()
+            sendResponse({ result: 'success' })
+            break
+        case 'pauseTimer':
+            backgroundTimer.pauseTimer()
+            sendResponse({ result: 'success' })
+            break
+        case 'clearTimer':
+            backgroundTimer.clearTimer()
             sendResponse({ result: 'success' })
             break
         default:
