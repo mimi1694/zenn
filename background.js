@@ -1,5 +1,5 @@
 let backgroundTimer = {
-    timerInterval: 1000, // seconds
+    timerInterval: 1000,
     timer: 0,
     started: false,
     interval: null,
@@ -19,7 +19,7 @@ let backgroundTimer = {
             },
             backgroundTimer.timerInterval)
     },
-    pauseTimer: function (){
+    pauseTimer: function () {
         backgroundTimer.started = true
         clearInterval(backgroundTimer.interval)
         backgroundTimer.updateTimer()
@@ -36,11 +36,20 @@ let backgroundTimer = {
         } else {
             chrome.browserAction.setBadgeText({ text: '' + backgroundTimer.timer })
         }
-        chrome.extension.sendRequest({ method: 'updateTimer', data: backgroundTimer.timer }, 
-        function (response) {
-        })
+        chrome.extension.sendRequest({ method: 'updateTimer', data: backgroundTimer.timer },
+            function (response) {
+            })
     },
 }
+
+let Reminder = function(name) {
+    name: name;
+    quietInterval: 0;
+    alarmInterval: 0;
+    alarm: null;
+}
+let date;
+let alarms = []
 
 chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
     switch (request.method) {
@@ -66,6 +75,16 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
             backgroundTimer.clearTimer()
             sendResponse({ result: 'success' })
             break
+        case 'newAlarm':
+            date = Date.now()
+            chrome.alarms.create(request.name, { when: date })
+            // alarm = new Reminder()
+            // alarm.name = request.name
+            // alarms.push(alarm)
+            chrome.alarms.get(request.name, function(alarm){
+                sendResponse({ result: alarm})
+            })
+            break
         default:
             break
     }
@@ -74,3 +93,40 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
 document.addEventListener('DOMContentLoaded', function () {
     backgroundTimer.timer = 0
 })
+
+chrome.alarms.onAlarm.addListener(function( thisAlarm ) {
+    console.log("Got an alarm!", thisAlarm);
+    createNotification();
+});
+
+var alarmSound = new Audio('relaxing_sms.mp3');
+let audioNotification = () => {
+    alarmSound.play();
+}
+
+function createNotification(){
+    let noti = {
+        type: "basic",
+        title: "Your Title",
+        message: "Your message",
+        iconUrl: "zenify_icon.png"
+    }
+    chrome.notifications.create(noti.title, noti, function(){
+        audioNotification()
+    })
+    chrome.webRequest.onBeforeRequest.addListener(
+        function() {
+            return {cancel: true};
+        },
+        {
+            urls: ['*://www.facebook.com/*']
+        },
+        ['blocking']
+    )
+    setTimeout(() => { 
+        chrome.notifications.clear("notificationName", 
+        () => {
+            alarmSound.pause()
+        })
+    }, 5000)
+}

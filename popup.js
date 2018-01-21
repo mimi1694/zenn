@@ -1,9 +1,11 @@
 let localTimer = {
   currentTimer: 0,
   getTimer: function () {
-    chrome.extension.sendRequest({ method: 'getbackgroundTimer' }, function (response) {
-      localTimer.currentTimer = response.result
-      localTimer.updateTimer()
+    chrome.extension.sendRequest(
+      { method: 'getbackgroundTimer' }, 
+      function (response) {
+        localTimer.currentTimer = response.result
+        localTimer.updateTimer()
     })
   },
   addToTimer: function (amount) {
@@ -15,7 +17,7 @@ let localTimer = {
     )
   },
   updateTimer: function () {
-    document.getElementById('timer').innerHTML = "" + localTimer.currentTimer
+    document.getElementById('timer').innerHTML = '' + localTimer.currentTimer
   },
   decrementTimer: function () {
     chrome.extension.sendRequest(
@@ -51,6 +53,22 @@ let localTimer = {
   }
 }
 
+let localReminders = {
+  name: name,
+  alarms: [],
+  setAlarmName: function (name) {
+    chrome.extension.sendRequest (
+      { method: 'setName', name: name },
+      function (response) {
+        console.log(response)
+        localReminder.name = response.name
+      }
+    )
+  }
+}
+let reminders = []
+let newReminder = {};
+
 chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
   switch (request.method) {
     case 'updateTimer':
@@ -64,32 +82,63 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
   }
 })
 
-document.addEventListener('DOMContentLoaded', function () {
-  const dropdown = document.getElementById('dropdown')  
-  //menu control
-  document.getElementById('timer-control').style.display = 'none'
-  document.getElementById('new-btn').onclick = () => {
-    document.getElementById('timer-control').style.display = 'block'
-    document.getElementById('button-control').style.display = 'none'
-  }
-  document.getElementById('saved-btn').onclick = () => {
-    document.getElementById('timer-control').style.display = 'block'
-    document.getElementById('button-control').style.display = 'none'
-  }
+let showMainMenu = () => {
+  document.getElementById('button-control').style.display = 'block'
+  document.getElementById('simple-timer-control').style.display = 'none'
+  document.getElementById('saved-reminders').style.display = 'none'
+}
 
-  //timer button control
+let showNewSimpleTimerPage = () => {
+  document.getElementById('simple-timer-control').style.display = 'block'
+  document.getElementById('button-control').style.display = 'none'
+
+  document.getElementById('go-back').onclick = () => {
+    showMainMenu()
+  }
   document.getElementById('go').onclick = function () {
     localTimer.startTimer()
     this.disabled = true
-    console.log('DROPDOWN VALUE', dropdown.value)
   }
   document.getElementById('pause').onclick = function () {
     localTimer.pauseTimer()
     document.getElementById('go').disabled = false
-    console.log('DROPDOWN VALUE', dropdown.value)
   }
   document.getElementById('clear').onclick = function() {
     localTimer.clearTimer()
-    console.log('DROPDOWN VALUE', dropdown.value)
+    document.getElementById('go').disabled = false
   }
+}
+
+let showRemindersPage = () => {
+  document.getElementById('saved-reminders').style.display = 'block'
+  document.getElementById('button-control').style.display = 'none'
+  document.getElementById('back').onclick = () => {
+    showMainMenu()
+  }
+  
+  document.getElementById('new-reminder').onclick = function () {
+    console.log('clicked')
+    chrome.extension.sendRequest(
+      { method: 'newAlarm', name: 'someReminder' },
+      function (response) {
+        console.log(response)
+        reminders.push(response.alarm)
+        console.log(reminders)
+      }
+    )
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const dropdown = document.getElementById('dropdown')  
+
+  showMainMenu()
+  
+  document.getElementById('new-btn').onclick = () => {
+    showNewSimpleTimerPage()
+  }
+  document.getElementById('saved-btn').onclick = () => {
+    showRemindersPage()
+  }
+  
 })

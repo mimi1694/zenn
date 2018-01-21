@@ -11,14 +11,19 @@
         "default_title": "Zen Your Chrome"
       },
       "background":{
-        "page":"background.html"
+        "scripts": ["background.js"]
       },
       "permissions": [
         "<all_urls>",
         "activeTab",
         "storage",
         "tabs",
-        "background"
+        "background",
+        "alarms",
+        "notifications",
+        "http://*/*",
+        "webRequest",
+        "webRequestBlocking"
       ],
       "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }
