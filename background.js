@@ -1,3 +1,4 @@
+//simple timer set up and functions
 let backgroundTimer = {
     timerInterval: 1000,
     timer: 0,
@@ -40,17 +41,52 @@ let backgroundTimer = {
             function (response) {
             })
     },
+    timerAlarm: function () {
+        alarmSound.play()
+    }
 }
 
-let Reminder = function(name) {
-    name: name;
-    quietInterval: 0;
-    alarmInterval: 0;
-    alarm: null;
+//reminder set up and functions
+let reminder = {
+    title: '',
+    message: '',
+    type: 'basic',
+    iconUrl: 'zenify_icon.png'
 }
-let date;
-let alarms = []
+let date
+let blockedURLs = []
+let alarmSound = new Audio('relaxing_sms.mp3');
+let audioNotification = () => {
+    alarmSound.play();
+}
 
+let createNonBlockingNotification = () => {
+    chrome.notifications.create(
+        reminder.title, 
+        reminder, 
+        function() {
+            audioNotification()
+        })
+    setTimeout(() => { 
+        chrome.notifications.clear(reminder.title,
+        () => {
+            alarmSound.pause()
+        })
+    }, 5000)
+}
+
+let createBlockingNotification = () => {
+    createNonBlockingNotification()
+    chrome.webRequest.onBeforeRequest.addListener(
+        function() {
+            return {cancel: true};
+        },
+        { urls: blockedURLs },
+        ['blocking']
+    )
+}
+
+//functionality
 chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
     switch (request.method) {
         case 'addTobackgroundTimer':
@@ -77,12 +113,11 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
             break
         case 'newAlarm':
             date = Date.now()
+            reminder.title = request.name
+            reminder.message = request.message
             chrome.alarms.create(request.name, { when: date })
-            // alarm = new Reminder()
-            // alarm.name = request.name
-            // alarms.push(alarm)
             chrome.alarms.get(request.name, function(alarm){
-                sendResponse({ result: alarm})
+                sendResponse({ result: alarm })
             })
             break
         default:
@@ -96,37 +131,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
 chrome.alarms.onAlarm.addListener(function( thisAlarm ) {
     console.log("Got an alarm!", thisAlarm);
-    createNotification();
+    createBlockingNotification();
 });
-
-var alarmSound = new Audio('relaxing_sms.mp3');
-let audioNotification = () => {
-    alarmSound.play();
-}
-
-function createNotification(){
-    let noti = {
-        type: "basic",
-        title: "Your Title",
-        message: "Your message",
-        iconUrl: "zenify_icon.png"
-    }
-    chrome.notifications.create(noti.title, noti, function(){
-        audioNotification()
-    })
-    chrome.webRequest.onBeforeRequest.addListener(
-        function() {
-            return {cancel: true};
-        },
-        {
-            urls: ['*://www.facebook.com/*']
-        },
-        ['blocking']
-    )
-    setTimeout(() => { 
-        chrome.notifications.clear("notificationName", 
-        () => {
-            alarmSound.pause()
-        })
-    }, 5000)
-}

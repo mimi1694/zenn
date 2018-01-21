@@ -1,3 +1,4 @@
+//simple timer set up and functions
 let localTimer = {
   currentTimer: 0,
   getTimer: function () {
@@ -53,6 +54,7 @@ let localTimer = {
   }
 }
 
+//reminder set up and funcationality
 let localReminders = {
   name: name,
   alarms: [],
@@ -69,19 +71,7 @@ let localReminders = {
 let reminders = []
 let newReminder = {};
 
-chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
-  switch (request.method) {
-    case 'updateTimer':
-      localTimer.currentTimer = request.data
-      localTimer.updateTimer()
-      console.log(localTimer.currentTimer)
-      sendResponse({ result: 'success' })
-      break
-    default:
-      break
-  }
-})
-
+//dom manipulation
 let showMainMenu = () => {
   document.getElementById('button-control').style.display = 'block'
   document.getElementById('simple-timer-control').style.display = 'none'
@@ -115,13 +105,13 @@ let showRemindersPage = () => {
   document.getElementById('back').onclick = () => {
     showMainMenu()
   }
-  
   document.getElementById('new-reminder').onclick = function () {
-    console.log('clicked')
     chrome.extension.sendRequest(
-      { method: 'newAlarm', name: 'someReminder' },
+      { method: 'newAlarm', 
+        name: 'someReminder', 
+        message: 'this is a message',
+        urlToBlock: '*://www.facebook.com/*' },
       function (response) {
-        console.log(response)
         reminders.push(response.alarm)
         console.log(reminders)
       }
@@ -129,16 +119,26 @@ let showRemindersPage = () => {
   }
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-  const dropdown = document.getElementById('dropdown')  
+//app functionality
+chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
+  switch (request.method) {
+    case 'updateTimer':
+      localTimer.currentTimer = request.data
+      localTimer.updateTimer()
+      console.log(localTimer.currentTimer)
+      sendResponse({ result: 'success' })
+      break
+    default:
+      break
+  }
+})
 
+document.addEventListener('DOMContentLoaded', function () {
   showMainMenu()
-  
   document.getElementById('new-btn').onclick = () => {
     showNewSimpleTimerPage()
   }
   document.getElementById('saved-btn').onclick = () => {
     showRemindersPage()
   }
-  
 })
