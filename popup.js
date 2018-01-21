@@ -8,6 +8,9 @@ let localTimer = {
         localTimer.currentTimer = response.result
         localTimer.updateTimer()
     })
+    // if(localTimer.currentTimer <= 0){
+    //   localTimer.clearTimer()
+    // }
   },
   addToTimer: function (amount) {
     chrome.extension.sendRequest(
@@ -72,33 +75,64 @@ let reminders = []
 let newReminder = {};
 
 //dom manipulation
+//main menu
 let showMainMenu = () => {
   document.getElementById('button-control').style.display = 'block'
   document.getElementById('simple-timer-control').style.display = 'none'
   document.getElementById('saved-reminders').style.display = 'none'
 }
 
+//simple timer
 let showNewSimpleTimerPage = () => {
   document.getElementById('simple-timer-control').style.display = 'block'
   document.getElementById('button-control').style.display = 'none'
-
+  const dropdown = document.getElementById('dropdown')
+  const go = document.getElementById('go')
+  const pause = document.getElementById('pause')
+  const clear = document.getElementById('clear')
+  let timeChoice = null
+  go.disabled = true;
+  pause.disabled = true;
+  //dropdown
+  dropdown.onchange = () => {
+    timeChoice = dropdown.value
+    go.disabled = false
+  }
+  //back
   document.getElementById('go-back').onclick = () => {
     showMainMenu()
   }
-  document.getElementById('go').onclick = function () {
-    localTimer.startTimer()
+  //go
+  go.onclick = function () {
+   // timeChoice = dropdown.value
+    console.log(timeChoice)
+    if(!timeChoice){
+      if(localTimer.currentTimer > 0){
+        localTimer.startTimer()
+      }
+      this.disabled = true
+    }
+    else{
+      localTimer.addToTimer(timeChoice * 60) 
+      localTimer.startTimer()
+    }
+    pause.disabled = false
+    this.disabled = true
+    timeChoice = null
+  }
+  //pause/play
+  pause.onclick = function () {
+    localTimer.pauseTimer()
+    go.disabled = false
     this.disabled = true
   }
-  document.getElementById('pause').onclick = function () {
-    localTimer.pauseTimer()
-    document.getElementById('go').disabled = false
-  }
-  document.getElementById('clear').onclick = function() {
+  //clear
+  clear.onclick = function() {
     localTimer.clearTimer()
-    document.getElementById('go').disabled = false
   }
 }
 
+//reminders
 let showRemindersPage = () => {
   document.getElementById('saved-reminders').style.display = 'block'
   document.getElementById('button-control').style.display = 'none'
@@ -135,6 +169,7 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
 
 document.addEventListener('DOMContentLoaded', function () {
   showMainMenu()
+  
   document.getElementById('new-btn').onclick = () => {
     showNewSimpleTimerPage()
   }

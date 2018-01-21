@@ -121,7 +121,6 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
             reminder.title = request.name
             reminder.message = request.message
             blockedURLs.push(request.urlToBlock)
-            console.log(blockedURLs)
             chrome.alarms.create(request.name, { when: date })
             chrome.alarms.get(request.name, function(alarm){
                 sendResponse({ result: alarm })
