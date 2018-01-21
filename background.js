@@ -75,15 +75,20 @@ let createNonBlockingNotification = () => {
     }, 5000)
 }
 
-let createBlockingNotification = () => {
+let createBlockingNotification = (timeout) => {
     createNonBlockingNotification()
+    let listener = function() {
+        return {cancel: true};
+    }
     chrome.webRequest.onBeforeRequest.addListener(
-        function() {
-            return {cancel: true};
-        },
+        listener,
         { urls: blockedURLs },
         ['blocking']
     )
+    setTimeout(() => {
+        chrome.webRequest.onBeforeRequest.removeListener(listener)
+        console.log('finished')
+    }, timeout)
 }
 
 //functionality
@@ -115,6 +120,8 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
             date = Date.now()
             reminder.title = request.name
             reminder.message = request.message
+            blockedURLs.push(request.urlToBlock)
+            console.log(blockedURLs)
             chrome.alarms.create(request.name, { when: date })
             chrome.alarms.get(request.name, function(alarm){
                 sendResponse({ result: alarm })
@@ -131,5 +138,5 @@ document.addEventListener('DOMContentLoaded', function () {
 
 chrome.alarms.onAlarm.addListener(function( thisAlarm ) {
     console.log("Got an alarm!", thisAlarm);
-    createBlockingNotification();
+    createBlockingNotification(15000);
 });
