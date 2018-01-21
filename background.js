@@ -16,7 +16,11 @@ let backgroundTimer = {
         backgroundTimer.started = true
         backgroundTimer.interval = setInterval(
             function () {
-                backgroundTimer.decrementTimer()
+                if (backgroundTimer.timer > 0) backgroundTimer.decrementTimer()
+                else {
+                    clearInterval(backgroundTimer.interval)
+                    backgroundTimer.timerAlarm()
+                }
             },
             backgroundTimer.timerInterval)
     },
@@ -136,6 +140,5 @@ document.addEventListener('DOMContentLoaded', function () {
 })
 
 chrome.alarms.onAlarm.addListener(function( thisAlarm ) {
-    console.log("Got an alarm!", thisAlarm);
     createBlockingNotification(15000);
 });

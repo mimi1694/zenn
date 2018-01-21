@@ -129,6 +129,7 @@ let showNewSimpleTimerPage = () => {
   //clear
   clear.onclick = function() {
     localTimer.clearTimer()
+    go.disabled = true
   }
 }
 
