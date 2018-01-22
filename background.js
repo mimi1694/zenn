@@ -35,11 +35,19 @@ let backgroundTimer = {
         backgroundTimer.timer = 0
         backgroundTimer.updateTimer()
     },
+    toPretty(seconds) {
+        let sec = seconds % 60
+        let min = (seconds - sec) / 60
+        if (sec < 10) sec = '' + 0 + sec
+        return '' + min + ':' + sec
+    },
     updateTimer: function () {
+        let text = backgroundTimer.toPretty(backgroundTimer.timer)
+        console.log(text)
         if (backgroundTimer.timer === 0) {
             chrome.browserAction.setBadgeText({ text: '' })
         } else {
-            chrome.browserAction.setBadgeText({ text: '' + backgroundTimer.timer })
+            chrome.browserAction.setBadgeText({ text: '' + text })
         }
         chrome.extension.sendRequest({ method: 'updateTimer', data: backgroundTimer.timer }, function () { })
     },
@@ -140,7 +148,7 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
         case 'getReminders':
             // console.log('saved reminders ',savedReminders)
             // chrome.alarms.getAll((alarm) => console.log(alarm))
-            sendResponse({ reminders: savedReminders})
+            sendResponse({ reminders: savedReminders })
             break
         default:
             break
