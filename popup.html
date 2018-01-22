@@ -9,7 +9,8 @@
       white-space: nowrap;
       height: 150px;
       width: 250px;
-      align-self: left;
+      align-self:center;
+      text-align: center;
     }
 
     h1 {
@@ -27,6 +28,18 @@
       width: 3em;
       height: 3em;
     }
+
+    form {
+      display: flex;
+      flex-direction: column; 
+      align-content:space-between;
+      text-align: left;
+    }
+    ul{
+      list-style-type: none;
+      padding-left: 0;
+      white-space: normal;
+    }
   </style>
 
   <script src="popup.js"></script>
@@ -42,8 +55,8 @@
     <div id="button-control">
       <span>Set Zen Timer</span>
       <br />
-      <button id="new-btn">New Simple Timer</button>
-      <button id="saved-btn">Saved Timers</button>
+      <button id="new-btn">Simple</button>
+      <button id="saved-btn">Saved</button>
     </div>
 
     <div id="simple-timer-control">
@@ -73,12 +86,29 @@
     <button id="back"> < </button>
     <div>
       <button id="new-reminder">NEW REMINDER</button>
-      <br />
-      <br />
+      <div id="reminder-form" style="display:none">
+        <form id="form">
+          <label>Name: <input type="text" name="reminderName"></label>
+          <label>Message: <input type="text" name="reminderMessage"></label>
+          <label>Start Time: <input type="datetime-local" name="startTime"></label>
+          <label>Frequency: <br>
+              <input type="radio" name="frequency" value=".5"> 30 Minutes<br>
+              <input type="radio" name="frequency" value="1"> 1 Hour<br>
+              <input type="radio" name="frequency" value="2"> 2 Hour<br>
+              <input type="radio" name="frequency" value="24"> Day<br>
+          </label>
+          <label>URLs to block:
+            <p>(in format: www.website.com, separated by comma)</p>
+            <input type="text" name="reminderUrls">
+          </label>
+          <input type="submit" name="submit">
+        </form>
+      </div>
     </div>
-    <div>
+    <div id="reminders">
       <h3>Reminders:</h3>
       <ul id="reminder-list">
+        <div id="holder"></div>
       </ul>
     </div>
   </div>

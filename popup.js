@@ -3,14 +3,11 @@ let localTimer = {
   currentTimer: 0,
   getTimer: function () {
     chrome.extension.sendRequest(
-      { method: 'getbackgroundTimer' }, 
+      { method: 'getbackgroundTimer' },
       function (response) {
         localTimer.currentTimer = response.result
         localTimer.updateTimer()
-    })
-    // if(localTimer.currentTimer <= 0){
-    //   localTimer.clearTimer()
-    // }
+      })
   },
   addToTimer: function (amount) {
     chrome.extension.sendRequest(
@@ -40,7 +37,7 @@ let localTimer = {
     )
   },
   pauseTimer: function () {
-    chrome.extension.sendRequest (
+    chrome.extension.sendRequest(
       { method: 'pauseTimer' },
       function (response) {
         localTimer.getTimer()
@@ -48,7 +45,7 @@ let localTimer = {
     )
   },
   clearTimer: function () {
-    chrome.extension.sendRequest (
+    chrome.extension.sendRequest(
       { method: 'clearTimer' },
       function (response) {
         localTimer.getTimer()
@@ -57,22 +54,7 @@ let localTimer = {
   }
 }
 
-//reminder set up and funcationality
-let localReminders = {
-  name: name,
-  alarms: [],
-  setAlarmName: function (name) {
-    chrome.extension.sendRequest (
-      { method: 'setName', name: name },
-      function (response) {
-        console.log(response)
-        localReminder.name = response.name
-      }
-    )
-  }
-}
-let reminders = []
-let newReminder = {};
+
 
 //dom manipulation
 //main menu
@@ -104,16 +86,14 @@ let showNewSimpleTimerPage = () => {
   }
   //go
   go.onclick = function () {
-   // timeChoice = dropdown.value
-    console.log(timeChoice)
-    if(!timeChoice){
-      if(localTimer.currentTimer > 0){
+    if (!timeChoice) {
+      if (localTimer.currentTimer > 0) {
         localTimer.startTimer()
       }
       this.disabled = true
     }
-    else{
-      localTimer.addToTimer(timeChoice * 60) 
+    else {
+      localTimer.addToTimer(timeChoice * 60)
       localTimer.startTimer()
     }
     pause.disabled = false
@@ -127,30 +107,87 @@ let showNewSimpleTimerPage = () => {
     this.disabled = true
   }
   //clear
-  clear.onclick = function() {
+  clear.onclick = function () {
     localTimer.clearTimer()
     go.disabled = true
   }
 }
 
-//reminders
+let reminders = []
+let alarms = []
+let newReminder = {}
+
+let createRemindersInDom = () => {
+  chrome.extension.sendRequest(
+    { method: 'getReminders' },
+    function (response) {
+      console.log(response.reminders)
+      reminders = response.reminders
+      for (var i = 0; i < response.reminders.length; i++) {
+        let reminder = response.reminders[i]
+        console.log('HI')
+        let date = new Date(reminder.scheduledTime).toLocaleTimeString()
+        let div = document.createElement('div')
+        let name = document.createTextNode(reminder.name)
+        let time = document.createTextNode(' Starts: ' + date)
+        let freq = document.createTextNode(' Every: ' + reminder.periodInMinutes + ' hours')
+        //let blocks = document.createTextNode('Blocked URLs: ' + reminder.urlToBlock.join(' '))
+        div.appendChild(name)
+        div.appendChild(time)
+        div.appendChild(freq)
+        //div.appendChild(blocks)
+        let currentDiv = document.getElementById('reminder-list')
+        currentDiv.appendChild(div)
+      }
+    })
+}
+
+let createNewReminder = (obj) => {
+  chrome.extension.sendRequest(
+    {
+      method: 'newAlarm',
+      name: obj.name,
+      message: obj.message,
+      startTime: obj.startTime,
+      frequency: obj.frequency,
+      urlToBlock: obj.urlToBlock
+    },
+    function (response) {
+      alarms.push(response.result)
+      createRemindersInDom(response)
+    }
+  )
+}
+
+let showReminderForm = () => {
+  document.body.style.height = '400px'
+  document.body.style.width = '300px'
+  document.getElementById('reminder-form').style.display = 'block'
+}
+
 let showRemindersPage = () => {
   document.getElementById('saved-reminders').style.display = 'block'
   document.getElementById('button-control').style.display = 'none'
   document.getElementById('back').onclick = () => {
+    document.body.style.height = '150px'
+    document.body.style.width = '250px'
+    document.getElementById('reminder-form').style.display = 'none'
     showMainMenu()
   }
+  createRemindersInDom()
   document.getElementById('new-reminder').onclick = function () {
-    chrome.extension.sendRequest(
-      { method: 'newAlarm', 
-        name: 'someReminder', 
-        message: 'this is a message',
-        urlToBlock: '*://www.facebook.com/*' },
-      function (response) {
-        reminders.push(response.alarm)
-        console.log(reminders)
-      }
-    )
+    showReminderForm()
+  }
+  document.getElementById('form').onsubmit = function (evt) {
+    evt.preventDefault()
+    newReminder.name = evt.target.reminderName.value
+    newReminder.message = evt.target.reminderMessage.value
+    newReminder.startTime = evt.target.startTime.value
+    newReminder.urlToBlock = evt.target.reminderUrls.value.split(' ').join('').split(',')
+    newReminder.frequency = event.target.frequency.value
+
+    document.getElementById('reminder-form').style.display = 'none'
+    createNewReminder(newReminder)
   }
 }
 
@@ -160,7 +197,6 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
     case 'updateTimer':
       localTimer.currentTimer = request.data
       localTimer.updateTimer()
-      console.log(localTimer.currentTimer)
       sendResponse({ result: 'success' })
       break
     default:
@@ -170,7 +206,7 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
 
 document.addEventListener('DOMContentLoaded', function () {
   showMainMenu()
-  
+
   document.getElementById('new-btn').onclick = () => {
     showNewSimpleTimerPage()
   }

@@ -41,9 +41,7 @@ let backgroundTimer = {
         } else {
             chrome.browserAction.setBadgeText({ text: '' + backgroundTimer.timer })
         }
-        chrome.extension.sendRequest({ method: 'updateTimer', data: backgroundTimer.timer },
-            function (response) {
-            })
+        chrome.extension.sendRequest({ method: 'updateTimer', data: backgroundTimer.timer }, function () { })
     },
     timerAlarm: function () {
         alarmSound.play()
@@ -59,6 +57,7 @@ let reminder = {
 }
 let date
 let blockedURLs = []
+let savedReminders = []
 let alarmSound = new Audio('relaxing_sms.mp3');
 let audioNotification = () => {
     alarmSound.play();
@@ -66,23 +65,23 @@ let audioNotification = () => {
 
 let createNonBlockingNotification = () => {
     chrome.notifications.create(
-        reminder.title, 
-        reminder, 
-        function() {
+        reminder.title,
+        reminder,
+        function () {
             audioNotification()
         })
-    setTimeout(() => { 
+    setTimeout(() => {
         chrome.notifications.clear(reminder.title,
-        () => {
-            alarmSound.pause()
-        })
+            () => {
+                alarmSound.pause()
+            })
     }, 5000)
 }
 
 let createBlockingNotification = (timeout) => {
     createNonBlockingNotification()
-    let listener = function() {
-        return {cancel: true};
+    let listener = function () {
+        return { cancel: true };
     }
     chrome.webRequest.onBeforeRequest.addListener(
         listener,
@@ -105,9 +104,9 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
         case 'getbackgroundTimer':
             sendResponse({ result: '' + backgroundTimer.timer })
             break
-        case 'decrementTimer':
-            sendResponse({ result: '' + backgroundTimer.timer })
-            break
+        // case 'decrementTimer':
+        //     sendResponse({ result: '' + backgroundTimer.timer })
+        //     break
         case 'startTimer':
             backgroundTimer.startTimer()
             sendResponse({ result: 'success' })
@@ -121,14 +120,27 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
             sendResponse({ result: 'success' })
             break
         case 'newAlarm':
-            date = Date.now()
+            date = new Date(request.startTime)
             reminder.title = request.name
             reminder.message = request.message
-            blockedURLs.push(request.urlToBlock)
-            chrome.alarms.create(request.name, { when: date })
-            chrome.alarms.get(request.name, function(alarm){
+            request.urlToBlock.forEach(function (url) {
+                blockedURLs.push('*://' + url + '/*')
+            })
+            console.log(blockedURLs)
+            chrome.alarms.create(request.name,
+                {
+                    when: date.getTime(),
+                    periodInMinutes: request.frequency * 60
+                })
+            chrome.alarms.get(request.name, function (alarm) {
+                savedReminders.push(alarm)
                 sendResponse({ result: alarm })
             })
+            break
+        case 'getReminders':
+            // console.log('saved reminders ',savedReminders)
+            // chrome.alarms.getAll((alarm) => console.log(alarm))
+            sendResponse({ reminders: savedReminders})
             break
         default:
             break
@@ -136,9 +148,11 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
 })
 
 document.addEventListener('DOMContentLoaded', function () {
+    console.log(blockedURLs)
+    chrome.alarms.getAll((alarm) => savedReminders.push(alarm))
     backgroundTimer.timer = 0
 })
 
-chrome.alarms.onAlarm.addListener(function( thisAlarm ) {
-    createBlockingNotification(15000);
+chrome.alarms.onAlarm.addListener(function () {
+    createBlockingNotification(10000);
 });
