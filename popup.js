@@ -18,7 +18,14 @@ let localTimer = {
     )
   },
   updateTimer: function () {
-    document.getElementById('timer').innerHTML = '' + localTimer.currentTimer
+    let text = localTimer.toPretty(localTimer.currentTimer)
+    document.getElementById('timer').innerHTML = '' + text
+  },
+  toPretty(seconds){
+    let sec = seconds%60
+    let min = (seconds-sec) / 60
+    if(sec<10) sec = ''+0+sec
+    return ''+min+':'+sec
   },
   decrementTimer: function () {
     chrome.extension.sendRequest(
@@ -53,8 +60,6 @@ let localTimer = {
     )
   }
 }
-
-
 
 //dom manipulation
 //main menu
@@ -130,7 +135,7 @@ let createRemindersInDom = () => {
         let div = document.createElement('div')
         let name = document.createTextNode(reminder.name)
         let time = document.createTextNode(' Starts: ' + date)
-        let freq = document.createTextNode(' Every: ' + reminder.periodInMinutes + ' hours')
+        let freq = document.createTextNode(' Every: ' + reminder.periodInMinutes + ' minutes')
         //let blocks = document.createTextNode('Blocked URLs: ' + reminder.urlToBlock.join(' '))
         div.appendChild(name)
         div.appendChild(time)
