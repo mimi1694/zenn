@@ -66,6 +66,7 @@ let reminder = {
 let date
 let blockedURLs = []
 let savedReminders = []
+//let fullInfoReminders = []
 let alarmSound = new Audio('relaxing_sms.mp3');
 let audioNotification = () => {
     alarmSound.play();
@@ -101,6 +102,17 @@ let createBlockingNotification = (timeout) => {
         console.log('finished')
     }, timeout)
 }
+let flatten = (arr) => {
+    let flattened = []
+    for (let i = 0; i < arr.length; i++) {
+      if (Array.isArray(arr[i])) {
+        flattened.push(...flatten(arr[i]))
+      } else {
+        flattened.push(arr[i])
+      }
+    }
+    return flattened
+  }
 
 //functionality
 chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
@@ -134,7 +146,16 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
             request.urlToBlock.forEach(function (url) {
                 blockedURLs.push('*://' + url + '/*')
             })
-            console.log(blockedURLs)
+            let thisReminder = {
+                name: request.name,
+                message: request.message,
+                startTime: request.startTime,
+                urlToBlock: request.urlToBlock,
+                frequency: request.frequency
+            }
+            //fullInfoReminders.push(thisReminder)
+            //console.log(fullInfoReminders)
+           // console.log(blockedURLs)
             chrome.alarms.create(request.name,
                 {
                     when: date.getTime(),
@@ -146,9 +167,21 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
             })
             break
         case 'getReminders':
-            // console.log('saved reminders ',savedReminders)
-            // chrome.alarms.getAll((alarm) => console.log(alarm))
-            sendResponse({ reminders: savedReminders })
+            sendResponse({ reminders: savedReminders}) 
+            break
+        case 'deleteReminder':
+            chrome.alarms.clear(request.alarmName, function(bool) {
+                // let urls = flatten(request.fullReminder.urlToBlock)
+                // blockedURLs = blockedURLs.filter( (url) => {
+                //     !urls.includes(url)
+                // })
+                // console.log(blockedURLs)
+                sendResponse({ response: bool})
+            })
+            savedReminders = []
+            chrome.alarms.getAll((alarm) => {
+                savedReminders.push(alarm)
+            })
             break
         default:
             break
@@ -156,11 +189,17 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
 })
 
 document.addEventListener('DOMContentLoaded', function () {
-    console.log(blockedURLs)
-    chrome.alarms.getAll((alarm) => savedReminders.push(alarm))
+    //console.log(blockedURLs)
+    // chrome.alarms.clearAll(() => {
+    //     console.log('all clear')
+    // })
+    chrome.alarms.getAll((alarm) => {
+        console.log(alarm)
+        savedReminders.push(alarm)
+    })
     backgroundTimer.timer = 0
 })
 
 chrome.alarms.onAlarm.addListener(function () {
-    createBlockingNotification(10000);
+    createBlockingNotification(20000); //20 seconds
 });

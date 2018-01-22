@@ -1,4 +1,4 @@
-//simple timer set up and functions
+//--------- SIMPLE TIMER FUNCTIONALITY ------ ///
 let localTimer = {
   currentTimer: 0,
   getTimer: function () {
@@ -21,11 +21,11 @@ let localTimer = {
     let text = localTimer.toPretty(localTimer.currentTimer)
     document.getElementById('timer').innerHTML = '' + text
   },
-  toPretty(seconds){
-    let sec = seconds%60
-    let min = (seconds-sec) / 60
-    if(sec<10) sec = ''+0+sec
-    return ''+min+':'+sec
+  toPretty(seconds) {
+    let sec = seconds % 60
+    let min = (seconds - sec) / 60
+    if (sec < 10) sec = '' + 0 + sec
+    return '' + min + ':' + sec
   },
   decrementTimer: function () {
     chrome.extension.sendRequest(
@@ -118,33 +118,88 @@ let showNewSimpleTimerPage = () => {
   }
 }
 
+//--------------SAVED REMINDERS FUNCTIONALITY --------------//
+
 let reminders = []
-let alarms = []
+//let alarms = []
 let newReminder = {}
+let reminderListNode = document.getElementById('reminder-list')
+let holder = document.getElementById('holder')
+
+let flatten = (arr) => {
+  let flattened = []
+  for (let i = 0; i < arr.length; i++) {
+    if (Array.isArray(arr[i])) {
+      flattened.push(...flatten(arr[i]))
+    } else {
+      flattened.push(arr[i])
+    }
+  }
+  return flattened
+}
+
+let onDeleteButton = (id) => {
+  //console.log('DELETE', document.getElementById(id), flatten(alarms))
+  // let thisReminder = flatten(alarms).find((elt) => {
+  //   return (elt.name === id)
+  // })
+ // console.log(thisReminder)
+  chrome.extension.sendRequest(
+    { method: 'deleteReminder', 
+      alarmName: id },
+    function (response) {
+      console.log(response)
+      remover()
+    }
+  )
+}
+
+let remover = () => {
+  if (reminderListNode.children.length) {
+    console.log(holder.childNodes, 'reminder list has children', reminderListNode.childElementCount, reminderListNode.childNodes)
+    for (var i = 0; i < reminderListNode.children.length; i++) {
+      if (reminderListNode.children[i]) {
+        reminderListNode.removeChild(reminderListNode.children[i])
+      }
+    }
+    console.log('holder list has children', holder.childNodes)
+  }
+}
+let appender = (sentReminders) => {
+  console.log('HEY', sentReminders)
+  let spreadReminders = flatten(sentReminders)
+  for (let i = 0; i < spreadReminders.length; i++) {
+    let reminder = spreadReminders[i]
+    let li = document.createElement('li')
+    let time = new Date(reminder.scheduledTime).toLocaleTimeString()
+    let date = new Date(reminder.scheduledTime).toLocaleDateString()
+    li.innerHTML = `${reminder.name} at ${time} starting on ${date}`
+    let btn = document.createElement('button')
+    btn.innerHTML = 'X'
+    btn.setAttribute('class', 'delete-btn')
+    btn.setAttribute('id', reminder.name)
+    li.append(btn)
+    reminderListNode.append(li)
+    document.getElementById(reminder.name).onclick = () => {
+      onDeleteButton(reminder.name)
+    }
+  }
+}
 
 let createRemindersInDom = () => {
+  //console.log('in create dom', alarms)
+  reminderListNode = document.getElementById('reminder-list')
+  holder = document.getElementById('holder')
   chrome.extension.sendRequest(
     { method: 'getReminders' },
     function (response) {
-      console.log(response.reminders)
+      console.log('RESPONSE', response)
+      //alarms = response.fullInfoReminders
       reminders = response.reminders
-      for (var i = 0; i < response.reminders.length; i++) {
-        let reminder = response.reminders[i]
-        console.log('HI')
-        let date = new Date(reminder.scheduledTime).toLocaleTimeString()
-        let div = document.createElement('div')
-        let name = document.createTextNode(reminder.name)
-        let time = document.createTextNode(' Starts: ' + date)
-        let freq = document.createTextNode(' Every: ' + reminder.periodInMinutes + ' minutes')
-        //let blocks = document.createTextNode('Blocked URLs: ' + reminder.urlToBlock.join(' '))
-        div.appendChild(name)
-        div.appendChild(time)
-        div.appendChild(freq)
-        //div.appendChild(blocks)
-        let currentDiv = document.getElementById('reminder-list')
-        currentDiv.appendChild(div)
-      }
-    })
+      remover()
+      appender(reminders)
+    }
+  )
 }
 
 let createNewReminder = (obj) => {
@@ -158,8 +213,8 @@ let createNewReminder = (obj) => {
       urlToBlock: obj.urlToBlock
     },
     function (response) {
-      alarms.push(response.result)
-      createRemindersInDom(response)
+     // alarms = response.fullInfoReminders
+      createRemindersInDom()
     }
   )
 }
@@ -190,13 +245,13 @@ let showRemindersPage = () => {
     newReminder.startTime = evt.target.startTime.value
     newReminder.urlToBlock = evt.target.reminderUrls.value.split(' ').join('').split(',')
     newReminder.frequency = event.target.frequency.value
-
+    //alarms.push(newReminder)
     document.getElementById('reminder-form').style.display = 'none'
     createNewReminder(newReminder)
   }
 }
 
-//app functionality
+// --------------- app functionality ----------- //
 chrome.extension.onRequest.addListener(function (request, sender, sendResponse) {
   switch (request.method) {
     case 'updateTimer':
@@ -211,7 +266,6 @@ chrome.extension.onRequest.addListener(function (request, sender, sendResponse) 
 
 document.addEventListener('DOMContentLoaded', function () {
   showMainMenu()
-
   document.getElementById('new-btn').onclick = () => {
     showNewSimpleTimerPage()
   }

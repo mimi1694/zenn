@@ -36,6 +36,7 @@
       text-align: left;
     }
     ul{
+      text-align: right;
       list-style-type: none;
       padding-left: 0;
       white-space: normal;
@@ -63,12 +64,14 @@
       <button id="go-back"> < </button>
       <select id="dropdown">
         <option selected disabled hidden value=''></option>
+        <option value=".1">:06</option>
         <option value=".25">:15</option>
         <option value="1">1 Minute</option>
         <option value="2">2 Minutes</option>
         <option value="3">3 Minutes</option>
         <option value="4">4 Minutes</option>
         <option value="5">5 Minutes</option>
+        <option value="10">10 Minutes</option>
       </select>
       <div>
       <button id="go">GO</button>
@@ -92,6 +95,7 @@
           <label>Message: <input type="text" name="reminderMessage"></label>
           <label>Start Time: <input type="datetime-local" name="startTime"></label>
           <label>Frequency: <br>
+              <input type="radio" name="frequency" value=".0167"> 1 Minutes<br>
               <input type="radio" name="frequency" value=".5"> 30 Minutes<br>
               <input type="radio" name="frequency" value="1"> 1 Hour<br>
               <input type="radio" name="frequency" value="2"> 2 Hour<br>
@@ -107,9 +111,10 @@
     </div>
     <div id="reminders">
       <h3>Reminders:</h3>
-      <ul id="reminder-list">
-        <div id="holder"></div>
-      </ul>
+      <div id="holder">
+        <ul id="reminder-list">
+        </ul>
+      </div>
     </div>
   </div>
 
